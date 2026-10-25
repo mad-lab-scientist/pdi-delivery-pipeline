@@ -305,6 +305,10 @@ test('Pipeline: published runs pass the strict record contract, newest first, at
   // Every stage the page describes has a command in ci/stages.mjs (that module throws if they drift apart).
   const ci = spawnSync(process.execPath, ['-e', "import('./ci/stages.mjs').then(m => console.log(m.stages.length))"], { cwd: repo, encoding: 'utf8' });
   assert(ci.status === 0 && Number(ci.stdout.trim()) === pipelineStages.length, `ci/stages.mjs does not match the public stages: ${ci.stderr.slice(0, 200)}`);
+  // ...and the Jenkinsfile runs the same stages, under the same names, in the same order.
+  const jf = readFileSync(join(repo, 'Jenkinsfile'), 'utf8');
+  const jStages = [...jf.matchAll(/stage\('([^']+)'\)\s*\{(?:(?!stage\()[\s\S])*?node ci\/run\.mjs ([a-z]+) /g)].map((m) => `${m[1]}=${m[2]}`);
+  eq(jStages.join(', '), pipelineStages.map((s) => `${s.name}=${s.id}`).join(', '), 'Jenkinsfile stages differ from the public stages');
 });
 
 test('Pipeline: /engineering shows exactly the latest run and the NIST text verbatim', () => {
