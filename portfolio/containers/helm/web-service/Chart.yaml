@@ -1,3 +1,4 @@
+---
 apiVersion: v2
 name: web-service
 description: A generic, production-hardened web service chart (deployment, service, ingress, HPA, PDB)

@@ -16,5 +16,8 @@ rules:
   octal-values:
     forbid-implicit-octal: true
 ignore: |
-  ansible/collections/
   **/node_modules/
+  **/collections/
+  **/.ansible/
+  # Helm chart templates are Go templates, not plain YAML (validated by `helm lint`/`helm template`).
+  **/helm/*/templates/
