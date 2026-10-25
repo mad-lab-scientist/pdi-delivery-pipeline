@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: baseline
+  namespace: pearson
+  author: Pearson Cyber Defense
+  description: Secure Linux baseline - packages, time, admin accounts, banners, kernel hardening, journald
+  license: proprietary
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm, trixie]
+    - name: EL
+      versions: ["9", "10"]
+    - name: opensuse
+      versions: [all]
+  galaxy_tags: [security, hardening, baseline, chrony]
+dependencies: []

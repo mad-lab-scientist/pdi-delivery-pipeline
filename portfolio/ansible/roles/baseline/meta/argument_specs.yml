@@ -1,0 +1,32 @@
+---
+argument_specs:
+  main:
+    short_description: Secure Linux baseline
+    options:
+      baseline_timezone:
+        type: str
+        description: IANA timezone name.
+      baseline_ntp_servers:
+        type: list
+        elements: str
+        description: NTP servers for chrony.
+      baseline_packages:
+        type: list
+        elements: str
+      baseline_packages_extra:
+        type: list
+        elements: str
+      baseline_admin_users:
+        type: list
+        elements: dict
+        description: Admin accounts with name, optional comment, shell, ssh_keys, sudo and state.
+      baseline_sudo_requires_password:
+        type: bool
+      baseline_banner:
+        type: str
+      baseline_journald_max_use:
+        type: str
+      baseline_manage_sysctl:
+        type: bool
+      baseline_sysctl:
+        type: dict

@@ -1,0 +1,6 @@
+---
+- name: Reboot pending
+  ansible.windows.win_reboot:
+    msg: Rebooting to apply baseline (SMB/SCHANNEL) changes
+    reboot_timeout: 900
+  when: false   # flip to true, or run with -e windows_reboot=true, during a maintenance window

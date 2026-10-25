@@ -1,0 +1,26 @@
+---
+# Example engagement scope. Copy, fill in from the signed Authorization to Test / SOW, and keep it with
+# the engagement records. Addresses here are documentation ranges (RFC 5737 / RFC 2606).
+engagement:
+  id: PDI-2026-014
+  client: Example Corp
+  authorized_by: Jane Smith, CISO, Example Corp
+  authorization_ref: SOW-2026-014; Authorization to Test signed 2026-10-20
+  start: "2026-10-25"
+  end: "2026-11-01"
+
+scope:
+  in_scope:
+    - 192.0.2.0/24
+    - 198.51.100.16/28
+    - app.example.com
+  out_of_scope:
+    # Excluded even though they fall inside an in-scope range (fragile / third-party / out of contract).
+    - 192.0.2.1          # core router
+    - 192.0.2.200/29     # third-party managed block
+
+constraints:
+  max_rate: 500          # packets per second ceiling the tools must honor
+  notes: >-
+    Business-hours testing only, 08:00-18:00 America/Chicago. No denial-of-service or exploitation
+    without separate written approval. Report critical findings immediately to the authorizing contact.

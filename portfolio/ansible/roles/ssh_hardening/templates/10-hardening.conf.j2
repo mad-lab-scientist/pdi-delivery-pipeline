@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+Port {{ ssh_hardening_port }}
+PermitRootLogin {{ ssh_hardening_permit_root_login }}
+PasswordAuthentication {{ 'yes' if ssh_hardening_password_authentication else 'no' }}
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+PermitEmptyPasswords no
+MaxAuthTries {{ ssh_hardening_max_auth_tries }}
+LoginGraceTime {{ ssh_hardening_login_grace_time }}
+ClientAliveInterval {{ ssh_hardening_client_alive_interval }}
+ClientAliveCountMax {{ ssh_hardening_client_alive_count_max }}
+X11Forwarding {{ 'yes' if ssh_hardening_x11_forwarding else 'no' }}
+AllowTcpForwarding {{ 'yes' if ssh_hardening_allow_tcp_forwarding else 'no' }}
+AllowAgentForwarding no
+Banner {{ ssh_hardening_banner }}
+LogLevel VERBOSE
+{% set kex = ssh_hardening_kex | select('in', ssh_hardening_supported_kex.stdout_lines) | list %}
+KexAlgorithms {{ kex | join(',') }}
+Ciphers {{ ssh_hardening_ciphers | join(',') }}
+MACs {{ ssh_hardening_macs | join(',') }}
+{% if ssh_hardening_allow_groups %}
+AllowGroups {{ ssh_hardening_allow_groups | join(' ') }}
+{% endif %}

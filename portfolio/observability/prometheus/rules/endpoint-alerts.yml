@@ -1,0 +1,40 @@
+---
+# Synthetic / blackbox endpoint and certificate alerts.
+groups:
+  - name: endpoints
+    rules:
+      - alert: EndpointDown
+        expr: probe_success == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Endpoint {{ $labels.instance }} is failing its probe"
+          description: "The blackbox probe for {{ $labels.instance }} has failed for 5 minutes."
+
+      - alert: HttpSlow
+        expr: probe_http_duration_seconds > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} is slow"
+          description: "HTTP response time is {{ $value | printf \"%.1f\" }}s (>2s)."
+
+      - alert: TlsCertExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 21
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate for {{ $labels.instance }} expiring soon"
+          description: "The certificate expires in {{ $value | printf \"%.0f\" }} days."
+
+      - alert: TlsCertExpiringCritical
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 7
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "TLS certificate for {{ $labels.instance }} expires within a week"
+          description: "The certificate expires in {{ $value | printf \"%.0f\" }} days. Renew now."

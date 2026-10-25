@@ -1,0 +1,11 @@
+<%- | String[1] $permit_root, String[1] $admin_group | -%>
+# Managed by Puppet (profile::base)
+PermitRootLogin <%= $permit_root %>
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+X11Forwarding no
+MaxAuthTries 3
+ClientAliveInterval 300
+ClientAliveCountMax 2
+AllowGroups <%= $admin_group %>

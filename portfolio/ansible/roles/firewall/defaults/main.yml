@@ -1,0 +1,10 @@
+---
+# SSH is allowed only from these networks when the list is non-empty (otherwise from anywhere).
+firewall_mgmt_cidrs: []
+firewall_ssh_port: 22
+# Services open to everyone: [{port: 443, proto: tcp}]
+firewall_public_ports: []
+# Ports open to specific sources: [{port: 9100, proto: tcp, sources: [10.20.3.20/32]}]
+firewall_restricted_ports: []
+firewall_default_incoming: deny
+firewall_logging: low

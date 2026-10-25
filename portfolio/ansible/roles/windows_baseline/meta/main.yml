@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  role_name: windows_baseline
+  namespace: pearson
+  author: Pearson Cyber Defense
+  description: Windows Server security baseline - SMB, SCHANNEL, RDP NLA, firewall, audit policy
+  license: proprietary
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Windows
+      versions: [all]
+  galaxy_tags: [windows, security, hardening]
+dependencies: []

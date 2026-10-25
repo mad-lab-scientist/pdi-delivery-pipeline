@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: firewall
+  namespace: pearson
+  author: Pearson Cyber Defense
+  description: Host firewall (ufw or firewalld) with SSH restricted to management networks
+  license: proprietary
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm, trixie]
+    - name: EL
+      versions: ["9", "10"]
+    - name: opensuse
+      versions: [all]
+  galaxy_tags: [firewall, ufw, firewalld, security]
+dependencies: []

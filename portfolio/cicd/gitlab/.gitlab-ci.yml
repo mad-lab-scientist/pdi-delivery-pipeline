@@ -1,0 +1,95 @@
+---
+# Example GitLab CI/CD pipeline: lint -> test -> build+scan container -> IaC plan -> gated deploy.
+# Secrets come from masked/protected CI/CD variables, never from the repo.
+stages: [lint, test, build, scan, plan, deploy]
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  TF_ROOT: terraform/environments/prod-aws
+
+default:
+  tags: [linux]
+
+# ---------------------------------------------------------------- lint
+lint:yaml:
+  stage: lint
+  image: pipelinecomponents/yamllint:latest
+  script: [yamllint .]
+
+lint:shell:
+  stage: lint
+  image: koalaman/shellcheck-alpine:v0.11.0
+  script:
+    - shellcheck --version
+    - find . -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -r shellcheck -x
+
+lint:terraform:
+  stage: lint
+  image: hashicorp/terraform:1.16
+  script:
+    - terraform -chdir=terraform fmt -check -recursive
+
+# ---------------------------------------------------------------- test
+test:unit:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - python -m unittest discover -s portfolio/network/tests -v
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------- build (rootless kaniko)
+build:image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor
+      --context "$CI_PROJECT_DIR"
+      --dockerfile "$CI_PROJECT_DIR/Dockerfile"
+      --destination "$DOCKER_IMAGE"
+      --reproducible
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------- scan
+scan:image:
+  stage: scan
+  image:
+    name: aquasec/trivy:0.76.1
+    entrypoint: [""]
+  script:
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$DOCKER_IMAGE"
+  allow_failure: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------- IaC plan
+plan:terraform:
+  stage: plan
+  image: hashicorp/terraform:1.16
+  script:
+    - cd "$TF_ROOT"
+    - terraform init -input=false
+    - terraform plan -input=false -out=plan.tfplan
+  artifacts:
+    paths: ["$TF_ROOT/plan.tfplan"]
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------- deploy (manual gate)
+deploy:terraform:
+  stage: deploy
+  image: hashicorp/terraform:1.16
+  script:
+    - cd "$TF_ROOT"
+    - terraform init -input=false
+    - terraform apply -input=false plan.tfplan
+  environment:
+    name: production
+  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

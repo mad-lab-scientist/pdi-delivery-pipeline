@@ -1,0 +1,53 @@
+---
+# Pull running configs from Cisco IOS and FortiGate and save them, newest alongside a timestamped copy.
+# Commit the backups/ directory to git for change history.
+#   ansible-playbook playbooks/network-backup.yml
+- name: Back up Cisco IOS devices
+  hosts: cisco_ios
+  gather_facts: false
+  vars:
+    backup_dir: "{{ playbook_dir }}/../backups/network"
+    backup_date: "{{ lookup('pipe', 'date +%Y-%m-%d') }}"
+  tasks:
+    - name: Fetch the running configuration
+      cisco.ios.ios_command:
+        commands: [show running-config]
+      register: ios_config
+
+    - name: Ensure the backup directory exists
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: "0750"
+      delegate_to: localhost
+
+    - name: Write the current and timestamped copies
+      ansible.builtin.copy:
+        content: "{{ ios_config.stdout[0] }}\n"
+        dest: "{{ item }}"
+        mode: "0640"
+      loop:
+        - "{{ backup_dir }}/{{ inventory_hostname }}.cfg"
+        - "{{ backup_dir }}/{{ inventory_hostname }}-{{ backup_date }}.cfg"
+      delegate_to: localhost
+
+- name: Back up FortiGate devices
+  hosts: fortigates
+  gather_facts: false
+  vars:
+    backup_dir: "{{ playbook_dir }}/../backups/network"
+  tasks:
+    - name: Fetch the full configuration via the monitor API
+      fortinet.fortios.fortios_monitor_fact:
+        selector: system_config_backup
+        vdom: "{{ fortigate_vdom }}"
+        params:
+          scope: global
+      register: fgt_backup
+
+    - name: Save the FortiGate configuration
+      ansible.builtin.copy:
+        content: "{{ fgt_backup.meta.raw }}"
+        dest: "{{ backup_dir }}/{{ inventory_hostname }}.conf"
+        mode: "0640"
+      delegate_to: localhost

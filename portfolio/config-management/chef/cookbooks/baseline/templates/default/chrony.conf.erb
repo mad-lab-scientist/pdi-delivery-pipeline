@@ -1,0 +1,7 @@
+# Managed by Chef (baseline::default)
+<% @servers.each do |s| -%>
+server <%= s %> iburst
+<% end -%>
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync

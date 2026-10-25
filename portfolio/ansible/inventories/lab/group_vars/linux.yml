@@ -1,0 +1,16 @@
+---
+ansible_user: opsadmin
+ansible_become: true
+
+baseline_timezone: America/Chicago
+baseline_ntp_servers: "{{ site_ntp_servers }}"
+baseline_admin_users:
+  - name: opsadmin
+    comment: Operations administrator
+    ssh_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl ops@admin-workstation"
+
+ssh_hardening_allow_groups: [sudo, wheel, opsadmin]
+firewall_mgmt_cidrs: "{{ site_mgmt_cidrs }}"
+fail2ban_ignore_cidrs: "{{ site_mgmt_cidrs }}"
+node_exporter_allowed_cidrs: "{{ site_monitoring_cidrs }}"

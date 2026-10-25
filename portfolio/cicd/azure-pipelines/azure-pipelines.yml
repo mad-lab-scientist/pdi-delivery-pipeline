@@ -1,0 +1,62 @@
+---
+# Azure DevOps multi-stage pipeline: validate -> build+scan -> deploy (with an environment approval gate).
+trigger:
+  branches:
+    include: [main]
+pr:
+  branches:
+    include: ["*"]
+
+pool:
+  vmImage: ubuntu-24.04
+
+variables:
+  imageName: storefront/web
+  tag: $(Build.SourceVersion)
+
+stages:
+  - stage: Validate
+    jobs:
+      - job: Lint
+        steps:
+          - script: pipx run yamllint .
+            displayName: yamllint
+          - script: |
+              sudo apt-get update && sudo apt-get install -y shellcheck
+              find . -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -r shellcheck -x
+            displayName: shellcheck
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: 1.16.7
+          - script: terraform -chdir=terraform fmt -check -recursive
+            displayName: terraform fmt
+
+  - stage: BuildAndScan
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: Build
+        steps:
+          - task: Docker@2
+            inputs:
+              command: build
+              repository: $(imageName)
+              tags: $(tag)
+              dockerfile: Dockerfile
+          - script: |
+              curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.76.1
+              trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $(imageName):$(tag)
+            displayName: Trivy scan
+
+  - stage: Deploy
+    dependsOn: BuildAndScan
+    condition: succeeded()
+    jobs:
+      - deployment: DeployProd
+        environment: production   # configure approvals/checks on this environment in Azure DevOps
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Push image and apply infrastructure here."
+                  displayName: Release

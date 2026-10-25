@@ -1,0 +1,10 @@
+# Managed by Chef (baseline::default)
+PermitRootLogin <%= @permit_root %>
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+X11Forwarding no
+MaxAuthTries 3
+ClientAliveInterval 300
+ClientAliveCountMax 2
+AllowGroups <%= @admin_group %>

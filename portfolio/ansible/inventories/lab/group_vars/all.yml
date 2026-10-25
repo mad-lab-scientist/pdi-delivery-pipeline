@@ -1,0 +1,8 @@
+---
+# Shared site facts. Secrets live in an Ansible Vault file (group_vars/all/vault.yml), never in plain text.
+site_domain: corp.example.com
+site_dns_servers: [10.20.3.21, 10.20.3.22]
+site_ntp_servers: [10.20.3.21, 10.20.3.22]
+site_syslog_server: 10.20.3.20
+site_mgmt_cidrs: [10.20.3.0/25]
+site_monitoring_cidrs: [10.20.3.20/32]

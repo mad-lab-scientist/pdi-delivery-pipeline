@@ -1,0 +1,7 @@
+---
+# URLs probed by the blackbox exporter (http_2xx module). Edit to match your public endpoints.
+- targets:
+    - https://www.example.com
+    - https://api.example.com/health
+  labels:
+    team: platform

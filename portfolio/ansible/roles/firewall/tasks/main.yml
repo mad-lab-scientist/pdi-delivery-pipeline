@@ -1,0 +1,88 @@
+---
+- name: Configure ufw (Debian family)
+  when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Install ufw
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+
+    - name: Allow SSH from the management networks
+      community.general.ufw:
+        rule: allow
+        port: "{{ firewall_ssh_port | string }}"
+        proto: tcp
+        from_ip: "{{ item }}"
+        comment: ssh-mgmt
+      loop: "{{ firewall_mgmt_cidrs if firewall_mgmt_cidrs else ['any'] }}"
+
+    - name: Allow public services
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.port | string }}"
+        proto: "{{ item.proto | default('tcp') }}"
+      loop: "{{ firewall_public_ports }}"
+
+    - name: Allow restricted services from their sources
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.0.port | string }}"
+        proto: "{{ item.0.proto | default('tcp') }}"
+        from_ip: "{{ item.1 }}"
+      loop: "{{ firewall_restricted_ports | subelements('sources') }}"
+
+    - name: Set default policies, logging and enable ufw
+      community.general.ufw:
+        state: enabled
+        direction: incoming
+        policy: "{{ firewall_default_incoming }}"
+        logging: "{{ firewall_logging }}"
+
+- name: Configure firewalld (RedHat and Suse families)
+  when: ansible_facts['os_family'] in ['RedHat', 'Suse']
+  block:
+    - name: Install firewalld
+      ansible.builtin.package:
+        name: firewalld
+        state: present
+
+    - name: Enable and start firewalld
+      ansible.builtin.service:
+        name: firewalld
+        enabled: true
+        state: started
+
+    - name: Allow SSH from the management networks only
+      ansible.posix.firewalld:
+        rich_rule: "rule family=ipv4 source address={{ item }} port port={{ firewall_ssh_port }} protocol=tcp accept"
+        zone: public
+        permanent: true
+        immediate: true
+        state: enabled
+      loop: "{{ firewall_mgmt_cidrs }}"
+
+    - name: Remove the open SSH service when SSH is restricted
+      ansible.posix.firewalld:
+        service: ssh
+        zone: public
+        permanent: true
+        immediate: true
+        state: "{{ 'disabled' if firewall_mgmt_cidrs else 'enabled' }}"
+
+    - name: Allow public services
+      ansible.posix.firewalld:
+        port: "{{ item.port }}/{{ item.proto | default('tcp') }}"
+        zone: public
+        permanent: true
+        immediate: true
+        state: enabled
+      loop: "{{ firewall_public_ports }}"
+
+    - name: Allow restricted services from their sources
+      ansible.posix.firewalld:
+        rich_rule: "rule family=ipv4 source address={{ item.1 }} port port={{ item.0.port }} protocol={{ item.0.proto | default('tcp') }} accept"
+        zone: public
+        permanent: true
+        immediate: true
+        state: enabled
+      loop: "{{ firewall_restricted_ports | subelements('sources') }}"

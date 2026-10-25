@@ -1,0 +1,10 @@
+---
+- name: Restart chrony
+  ansible.builtin.service:
+    name: "{{ baseline_chrony_service }}"
+    state: restarted
+
+- name: Restart journald
+  ansible.builtin.service:
+    name: systemd-journald
+    state: restarted

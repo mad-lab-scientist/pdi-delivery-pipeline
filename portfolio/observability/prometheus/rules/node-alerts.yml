@@ -1,0 +1,71 @@
+---
+# Host-level alerts for node_exporter. Validate:  promtool check rules rules/node-alerts.yml
+groups:
+  - name: node-availability
+    rules:
+      - alert: NodeDown
+        expr: up{job="node"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node {{ $labels.instance }} is down"
+          description: "node_exporter on {{ $labels.instance }} has been unreachable for 3 minutes."
+
+      - alert: NodeRebooted
+        expr: time() - node_boot_time_seconds < 600
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "{{ $labels.instance }} rebooted"
+          description: "{{ $labels.instance }} booted less than 10 minutes ago."
+
+  - name: node-resources
+    rules:
+      - alert: HighCpuLoad
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | printf \"%.0f\" }}% (>90%) for 10 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | printf \"%.0f\" }}% (>90%) for 10 minutes."
+
+      - alert: DiskWillFillIn24h
+        expr: |
+          predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}[6h], 24 * 3600) < 0
+          and node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes < 0.2
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} will fill within 24h"
+          description: "Based on the last 6h trend, {{ $labels.mountpoint }} is projected to run out of space within a day."
+
+      - alert: DiskSpaceCritical
+        expr: node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk on {{ $labels.instance }}:{{ $labels.mountpoint }}"
+          description: "Only {{ $value | printf \"%.0f\" }}% space left."
+
+      - alert: ClockNotSynchronising
+        expr: min_over_time(node_timex_sync_status[5m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Clock not synchronised on {{ $labels.instance }}"
+          description: "NTP sync has been lost; Kerberos and TLS can fail if drift grows."

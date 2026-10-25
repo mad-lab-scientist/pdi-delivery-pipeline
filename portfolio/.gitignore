@@ -1,0 +1,30 @@
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Ansible installed collections and runtime
+ansible/collections/
+ansible/.ansible/
+*.retry
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Authorized-assessment engagement output (never commit scan results)
+kali/engagements/
+
+# Secrets (should never exist here)
+*.pem
+*.key
+secrets/*
+!secrets/.gitkeep
+
+# Editor / OS
+.DS_Store
+*.swp

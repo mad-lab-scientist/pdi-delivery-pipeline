@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nmaprun scanner="nmap" args="nmap -sV -oA recon 192.0.2.10 192.0.2.11" version="7.95">
+  <host>
+    <status state="up"/>
+    <address addr="192.0.2.10" addrtype="ipv4"/>
+    <hostnames><hostname name="web.example.com" type="PTR"/></hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open"/>
+        <service name="ssh" product="OpenSSH" version="9.6p1"/>
+      </port>
+      <port protocol="tcp" portid="23">
+        <state state="open"/>
+        <service name="telnet"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="open"/>
+        <service name="http" product="nginx" version="1.27.0"/>
+      </port>
+      <port protocol="tcp" portid="3306">
+        <state state="open"/>
+        <service name="mysql" product="MySQL" version="8.0.39"/>
+      </port>
+    </ports>
+  </host>
+  <host>
+    <status state="up"/>
+    <address addr="192.0.2.11" addrtype="ipv4"/>
+    <hostnames/>
+    <ports>
+      <port protocol="tcp" portid="3389">
+        <state state="open"/>
+        <service name="ms-wbt-server" product="Microsoft Terminal Services"/>
+      </port>
+      <port protocol="udp" portid="161">
+        <state state="open"/>
+        <service name="snmp"/>
+      </port>
+    </ports>
+  </host>
+</nmaprun>

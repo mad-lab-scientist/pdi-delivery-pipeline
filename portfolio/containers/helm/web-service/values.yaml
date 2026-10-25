@@ -1,0 +1,55 @@
+---
+replicaCount: 3
+
+image:
+  repository: registry.example.com/storefront/web
+  tag: ""          # defaults to .Chart.AppVersion; pin by digest in production
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  host: shop.example.com
+  tlsSecret: web-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Hardened by default; override only with good reason.
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+env:
+  APP_ENV: production
+  LOG_FORMAT: json
+
+probes:
+  liveness: /healthz
+  readiness: /readyz

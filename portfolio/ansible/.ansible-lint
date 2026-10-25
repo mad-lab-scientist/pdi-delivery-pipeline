@@ -1,0 +1,10 @@
+---
+profile: production
+exclude_paths:
+  - collections/
+  - backups/
+# The example inventory uses documentation-range IPs; vault files are not present in the repo.
+skip_list:
+  - var-naming[no-role-prefix]   # group_vars intentionally set connection/become vars
+warn_list:
+  - experimental

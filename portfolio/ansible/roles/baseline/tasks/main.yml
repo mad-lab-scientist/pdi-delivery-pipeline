@@ -1,0 +1,129 @@
+---
+- name: Check that the distribution family is supported
+  ansible.builtin.assert:
+    that: ansible_facts['os_family'] in ['Debian', 'RedHat', 'Suse']
+    fail_msg: "baseline supports Debian, RedHat and Suse families, not {{ ansible_facts['os_family'] }}"
+    quiet: true
+
+- name: Load distribution-specific variables
+  ansible.builtin.include_vars: "{{ ansible_facts['os_family'] }}.yml"
+
+- name: Install baseline packages
+  ansible.builtin.package:
+    name: "{{ baseline_packages + baseline_packages_extra }}"
+    state: present
+
+- name: Set the timezone
+  community.general.timezone:
+    name: "{{ baseline_timezone }}"
+
+- name: Configure chrony time sources
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: "{{ baseline_chrony_conf }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+
+- name: Enable and start chrony
+  ansible.builtin.service:
+    name: "{{ baseline_chrony_service }}"
+    enabled: true
+    state: started
+
+- name: Split admin accounts into present and absent
+  ansible.builtin.set_fact:
+    baseline_users_present: >-
+      {{ baseline_admin_users | rejectattr('state', 'defined') | list
+         + baseline_admin_users | selectattr('state', 'defined') | selectattr('state', 'equalto', 'present') | list }}
+    baseline_users_absent: "{{ baseline_admin_users | selectattr('state', 'defined') | selectattr('state', 'equalto', 'absent') | list }}"
+
+- name: Manage admin accounts
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    comment: "{{ item.comment | default(omit) }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    create_home: true
+    state: "{{ item.state | default('present') }}"
+    remove: "{{ (item.state | default('present')) == 'absent' }}"
+  loop: "{{ baseline_admin_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install admin SSH keys (exclusive, so removed keys are revoked)
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_keys | join('\n') }}"
+    exclusive: true
+    state: present
+  loop: "{{ baseline_users_present | selectattr('ssh_keys', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Grant sudo to admin accounts
+  ansible.builtin.template:
+    src: sudoers.j2
+    dest: "/etc/sudoers.d/90-{{ item.name }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+  loop: "{{ baseline_users_present }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.sudo | default(true)
+
+- name: Remove sudo for removed accounts
+  ansible.builtin.file:
+    path: "/etc/sudoers.d/90-{{ item.name }}"
+    state: absent
+  loop: "{{ baseline_users_absent }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Set the login banners
+  ansible.builtin.copy:
+    content: "{{ baseline_banner }}"
+    dest: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - /etc/issue
+    - /etc/issue.net
+    - /etc/motd
+
+- name: Apply kernel hardening (sysctl)
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/90-baseline.conf
+    reload: true
+    state: present
+  loop: "{{ baseline_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}={{ item.value }}"
+  when: baseline_manage_sysctl
+
+- name: Create the journald drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Cap and persist the systemd journal
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/50-baseline.conf
+    content: |
+      # Managed by Ansible (role baseline)
+      [Journal]
+      Storage=persistent
+      SystemMaxUse={{ baseline_journald_max_use }}
+      Compress=yes
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart journald

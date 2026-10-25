@@ -1,0 +1,14 @@
+---
+ansible_connection: ansible.netcommon.network_cli
+ansible_network_os: cisco.ios.ios
+ansible_user: netops
+ansible_password: "{{ vault_network_password }}"
+ansible_become: true
+ansible_become_method: enable
+ansible_become_password: "{{ vault_network_enable_secret }}"
+
+cisco_ios_baseline_ntp_servers: "{{ site_ntp_servers }}"
+cisco_ios_baseline_syslog_server: "{{ site_syslog_server }}"
+cisco_ios_baseline_domain: "{{ site_domain }}"
+cisco_ios_baseline_mgmt_acl_networks:
+  - {network: 10.20.3.0, wildcard: 0.0.0.127}

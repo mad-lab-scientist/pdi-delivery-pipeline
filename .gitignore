@@ -1,3 +1,12 @@
 website/dist/
 ci/out/
 node_modules/
+portfolio/**/.terraform/
+portfolio/**/.terraform.lock.hcl
+portfolio/ansible/collections/
+portfolio/ansible/.ansible/
+portfolio/**/__pycache__/
+portfolio/kali/engagements/
+*.tfstate
+*.tfstate.*
+*.tfplan

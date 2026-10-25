@@ -1,0 +1,53 @@
+---
+# Rolling patch run: one host at a time, health-checked, so a service group is never all down at once.
+#   ansible-playbook playbooks/patch-linux.yml -e reboot=true --limit web
+- name: Patch Linux hosts in a rolling fashion
+  hosts: linux
+  become: true
+  serial: 1
+  max_fail_percentage: 0
+  vars:
+    reboot: false
+  tasks:
+    - name: Upgrade all packages (apt)
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+        autoremove: true
+      when: ansible_facts['os_family'] == 'Debian'
+      register: apt_patch
+
+    - name: Upgrade security packages (dnf)  # noqa: package-latest - patching to latest is the purpose
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        security: true
+        update_cache: true
+      when: ansible_facts['os_family'] == 'RedHat'
+      register: dnf_patch
+
+    - name: Apply patches (zypper)
+      community.general.zypper:
+        name: "*"
+        state: latest
+        type: patch
+      when: ansible_facts['os_family'] == 'Suse'
+      register: zypper_patch
+
+    - name: Check whether a reboot is required (Debian)
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Reboot if required and requested
+      ansible.builtin.reboot:
+        reboot_timeout: 600
+      when:
+        - reboot | bool
+        - (reboot_required_file.stat.exists | default(false)) or ansible_facts['os_family'] != 'Debian'
+
+    - name: Wait for the host to answer again
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+      when: reboot | bool

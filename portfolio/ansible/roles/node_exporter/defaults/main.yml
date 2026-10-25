@@ -1,0 +1,8 @@
+---
+node_exporter_version: "1.12.1"
+node_exporter_listen: ":9100"
+node_exporter_collectors_enabled: [systemd, processes]
+node_exporter_collectors_disabled: [wifi, infiniband]
+# Sources allowed to scrape (opened in ufw/firewalld when the host firewall is active).
+node_exporter_allowed_cidrs: []
+node_exporter_install_dir: /opt/node_exporter

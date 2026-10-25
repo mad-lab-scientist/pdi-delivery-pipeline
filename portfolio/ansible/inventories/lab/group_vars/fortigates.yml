@@ -1,0 +1,9 @@
+---
+# FortiOS REST API over HTTPS with an API token (System > Administrators > REST API Admin), from Vault.
+ansible_connection: ansible.netcommon.httpapi
+ansible_network_os: fortinet.fortios.fortios
+ansible_httpapi_use_ssl: true
+ansible_httpapi_validate_certs: true
+ansible_httpapi_port: 443
+fortios_access_token: "{{ vault_fortios_api_token }}"
+fortigate_vdom: root

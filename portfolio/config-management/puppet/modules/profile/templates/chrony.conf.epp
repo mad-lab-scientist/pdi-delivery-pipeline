@@ -1,0 +1,8 @@
+<%- | Array[String[1]] $servers | -%>
+# Managed by Puppet (profile::base)
+<% $servers.each |$s| { -%>
+server <%= $s %> iburst
+<% } -%>
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync

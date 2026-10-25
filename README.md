@@ -13,6 +13,8 @@ network. Live results: **[mrpearson.net/engineering](https://mrpearson.net/engin
 | `ci/` | The release-pipeline runner (`run.mjs`), stage definitions, the repository secret scan and the SBOM/audit stage |
 | `Jenkinsfile` | The Jenkins pipeline: one stage per pipeline stage, ending in a human approval |
 | `.github/workflows/ci.yml` | This repository's own CI: build, test suite and secret scan on every push, with actions pinned to commit SHAs |
+| `portfolio/` | A standalone infrastructure & security engineering toolkit (Python, Bash, PowerShell, Terraform, Ansible, Puppet, Chef, Kubernetes, Helm, cloud, runbooks) — see [`portfolio/README.md`](portfolio/README.md) |
+| `.github/workflows/portfolio-ci.yml` | CI that lints and tests every tool in `portfolio/` |
 
 ## The release pipeline
 Every release of mrpearson.net passes these stages before it can be deployed. Stages marked *private* run against

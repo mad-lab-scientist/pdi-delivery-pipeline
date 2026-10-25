@@ -1,0 +1,2 @@
+# {{ ansible_managed }}
+{{ item.name }} ALL=(ALL:ALL) {{ '' if baseline_sudo_requires_password else 'NOPASSWD: ' }}ALL

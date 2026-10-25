@@ -1,0 +1,17 @@
+---
+windows_baseline_timezone: Central Standard Time
+windows_baseline_ntp_servers: []
+windows_baseline_dns_servers: []
+windows_baseline_disable_smbv1: true
+windows_baseline_require_smb_signing: true
+windows_baseline_disable_print_spooler: false   # true on servers that are not print servers (PrintNightmare)
+windows_baseline_disable_legacy_tls: true
+windows_baseline_enable_firewall: true
+windows_baseline_rdp_nla: true
+windows_baseline_audit_subcategories:
+  - {subcategory: "Logon", success: true, failure: true}
+  - {subcategory: "Logoff", success: true, failure: false}
+  - {subcategory: "User Account Management", success: true, failure: true}
+  - {subcategory: "Security Group Management", success: true, failure: false}
+  - {subcategory: "Process Creation", success: true, failure: false}
+  - {subcategory: "Audit Policy Change", success: true, failure: false}

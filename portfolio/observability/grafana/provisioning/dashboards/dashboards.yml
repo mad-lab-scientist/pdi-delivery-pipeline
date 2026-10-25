@@ -1,0 +1,14 @@
+---
+# Tells Grafana to load dashboard JSON from a folder (mount the json/ directory alongside).
+apiVersion: 1
+providers:
+  - name: pdi-dashboards
+    orgId: 1
+    folder: Platform
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

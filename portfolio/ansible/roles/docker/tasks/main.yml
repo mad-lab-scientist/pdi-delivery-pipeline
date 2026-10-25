@@ -1,0 +1,64 @@
+---
+- name: Add Docker's apt repository (Debian family)
+  when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Create the keyring directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Add the Docker apt repository (deb822, signed-by its own key)
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: [deb]
+        uris: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}"
+        suites: ["{{ ansible_facts['distribution_release'] }}"]
+        components: [stable]
+        architectures: ["{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'amd64' }}"]
+        signed_by: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
+        state: present
+      register: docker_apt_repo
+
+    # Must run inline before the install task below, so a handler (deferred to play end) would be too late.
+    - name: Refresh the apt cache after adding the repository  # noqa: no-handler
+      ansible.builtin.apt:
+        update_cache: true
+      when: docker_apt_repo is changed
+
+- name: Add Docker's dnf repository (RedHat family)
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable
+    baseurl: "https://download.docker.com/linux/rhel/$releasever/$basearch/stable"
+    gpgkey: https://download.docker.com/linux/rhel/gpg
+    gpgcheck: true
+    enabled: true
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Install Docker Engine (upstream packages on Debian/RedHat, distribution packages on SUSE)
+  ansible.builtin.package:
+    name: "{{ docker_packages if ansible_facts['os_family'] != 'Suse' else ['docker', 'docker-compose'] }}"
+    state: present
+
+- name: Configure the Docker daemon
+  ansible.builtin.copy:
+    content: "{{ docker_daemon_options | to_nice_json }}\n"
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart docker
+
+- name: Enable and start Docker
+  ansible.builtin.service:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Add users to the docker group (root-equivalent; keep this list short)
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
