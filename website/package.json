@@ -1,0 +1,15 @@
+{
+  "name": "pdi-website",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "mrpearson.net public site (Pearson Cyber Defense). Zero-dependency static build with fact-checking tests.",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/run-tests.mjs",
+    "preview": "node preview.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

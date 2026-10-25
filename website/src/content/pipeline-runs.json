@@ -1,0 +1,180 @@
+[
+  {
+    "schema": 1,
+    "id": "local-20261025-025611",
+    "runner": "local",
+    "startedAt": "2026-10-25T02:56:11Z",
+    "finishedAt": "2026-10-25T02:58:36Z",
+    "durationSec": 144.3,
+    "commit": null,
+    "release": {
+      "version": "3.2.0"
+    },
+    "result": "passed",
+    "stages": [
+      {
+        "id": "facts",
+        "result": "passed",
+        "durationSec": 0.6,
+        "checks": {
+          "passed": 25,
+          "failed": 0
+        }
+      },
+      {
+        "id": "build",
+        "result": "passed",
+        "durationSec": 1.2,
+        "checks": {
+          "passed": 54,
+          "failed": 0
+        }
+      },
+      {
+        "id": "static",
+        "result": "passed",
+        "durationSec": 1.6,
+        "checks": {
+          "passed": 17,
+          "failed": 0
+        }
+      },
+      {
+        "id": "smoke",
+        "result": "passed",
+        "durationSec": 63.5,
+        "checks": {
+          "passed": 114,
+          "failed": 0
+        }
+      },
+      {
+        "id": "secrets",
+        "result": "passed",
+        "durationSec": 0.8,
+        "checks": {
+          "passed": 11,
+          "failed": 0
+        }
+      },
+      {
+        "id": "deps",
+        "result": "passed",
+        "durationSec": 3.2,
+        "checks": {
+          "passed": 2,
+          "failed": 0
+        }
+      },
+      {
+        "id": "rehearsal",
+        "result": "passed",
+        "durationSec": 73.4,
+        "checks": {
+          "passed": 42,
+          "failed": 0
+        }
+      }
+    ],
+    "totals": {
+      "checks": 265,
+      "failed": 0
+    },
+    "sbom": {
+      "format": "CycloneDX",
+      "components": 114
+    },
+    "audit": {
+      "gate": "passed"
+    }
+  },
+  {
+    "schema": 1,
+    "id": "local-20261025-020856",
+    "runner": "local",
+    "startedAt": "2026-10-25T02:08:56Z",
+    "finishedAt": "2026-10-25T02:12:41Z",
+    "durationSec": 163.8,
+    "commit": null,
+    "release": {
+      "version": "3.2.0"
+    },
+    "result": "passed",
+    "stages": [
+      {
+        "id": "facts",
+        "result": "passed",
+        "durationSec": 0.6,
+        "checks": {
+          "passed": 25,
+          "failed": 0
+        }
+      },
+      {
+        "id": "build",
+        "result": "passed",
+        "durationSec": 1.5,
+        "checks": {
+          "passed": 54,
+          "failed": 0
+        }
+      },
+      {
+        "id": "static",
+        "result": "passed",
+        "durationSec": 3.6,
+        "checks": {
+          "passed": 17,
+          "failed": 0
+        }
+      },
+      {
+        "id": "smoke",
+        "result": "passed",
+        "durationSec": 75.2,
+        "checks": {
+          "passed": 114,
+          "failed": 0
+        }
+      },
+      {
+        "id": "secrets",
+        "result": "passed",
+        "durationSec": 1.8,
+        "checks": {
+          "passed": 11,
+          "failed": 0
+        }
+      },
+      {
+        "id": "deps",
+        "result": "passed",
+        "durationSec": 4.7,
+        "checks": {
+          "passed": 2,
+          "failed": 0
+        }
+      },
+      {
+        "id": "rehearsal",
+        "result": "passed",
+        "durationSec": 76.4,
+        "checks": {
+          "passed": 42,
+          "failed": 0
+        }
+      }
+    ],
+    "totals": {
+      "checks": 265,
+      "failed": 0
+    },
+    "sbom": {
+      "format": "CycloneDX",
+      "components": 114
+    },
+    "audit": {
+      "gate": "passed"
+    }
+  }
+]
