@@ -5,8 +5,9 @@ import { stages as publicStages } from '../website/src/content/pipeline.mjs';
 
 const commands = {
   facts: { run: [['node', 'website/build.mjs'], ['node', 'website/test/run-tests.mjs']] },
-  // Packages the release candidate (the rehearsal deploys that tarball). A released version refuses to repackage.
-  build: { run: [['node', 'portal/patch/apply.mjs']], count: /patched \d+ files with (\d+) patches/ },
+  // Packages the release candidate (the rehearsal deploys that tarball). A released version is built from source
+  // without repackaging, and the verified archived upload is restored for the later stages.
+  build: { run: [['node', 'portal/patch/apply.mjs', '--ci']], count: /patched \d+ files with (\d+) patches/ },
   static: { run: [['node', 'portal/patch/test.mjs']] },
   smoke: { run: [['node', 'portal/patch/smoke.mjs', '{work}/smoke']] },
   secrets: { run: [['node', 'ci/scan-secrets.mjs']] },

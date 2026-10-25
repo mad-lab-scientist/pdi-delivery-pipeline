@@ -12,7 +12,7 @@ network. Live results: **[mrpearson.net/engineering](https://mrpearson.net/engin
 | `website/test/run-tests.mjs` | The site's test suite: truth guards (only approved prices, no withdrawn claims), CSP, links, accessibility, budgets, no internal details, and the pipeline-record contract |
 | `ci/` | The release-pipeline runner (`run.mjs`), stage definitions, the repository secret scan and the SBOM/audit stage |
 | `Jenkinsfile` | The Jenkins pipeline: one stage per pipeline stage, ending in a human approval |
-| `.github/workflows/ci.yml` | This repository's own CI: build, test suite and secret scan on every push |
+| `.github/workflows/ci.yml` | This repository's own CI: build, test suite and secret scan on every push, with actions pinned to commit SHAs |
 
 ## The release pipeline
 Every release of mrpearson.net passes these stages before it can be deployed. Stages marked *private* run against
