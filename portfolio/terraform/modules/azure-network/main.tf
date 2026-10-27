@@ -122,14 +122,21 @@ resource "azurerm_storage_account" "flow" {
   min_tls_version           = "TLS1_2"
   shared_access_key_enabled = true
   tags                      = local.common_tags
+
+  # Deny by default; Network Watcher writes flow logs through the trusted Azure services exception.
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
+  }
 }
 
+# Virtual network flow logs. Azure no longer accepts new NSG flow logs (retired in favour of VNet flow logs).
 resource "azurerm_network_watcher_flow_log" "this" {
   count                = var.enable_flow_logs ? 1 : 0
   network_watcher_name = "NetworkWatcher_${var.location}"
   resource_group_name  = "NetworkWatcherRG"
   name                 = "fl-${var.name}"
-  target_resource_id   = azurerm_network_security_group.this.id
+  target_resource_id   = azurerm_virtual_network.this.id
   storage_account_id   = azurerm_storage_account.flow[0].id
   enabled              = true
   version              = 2

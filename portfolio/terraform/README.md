@@ -8,7 +8,7 @@ Reusable modules and example environments (Terraform ≥ 1.6). Every module and 
 | Module | What it builds |
 |---|---|
 | `aws-vpc` | Production VPC: public/private subnets across 2–3 AZs, internet gateway, optional NAT gateways (HA or single), optional VPC flow logs to CloudWatch with a least-privilege role. Subnets derived with `cidrsubnet`. |
-| `azure-network` | Resource group + VNet + subnets, a default-deny NSG (management allowed only from named sources), optional NSG flow logs. |
+| `azure-network` | Resource group + VNet + subnets, a default-deny NSG (management allowed only from named sources), optional VNet flow logs to a default-deny storage account. |
 | `gcp-network` | Custom-subnet VPC with optional GKE secondary ranges and flow logs, firewall rules (allow-internal, allow-SSH-from-trusted, explicit deny), optional Cloud NAT. |
 | `proxmox-vm` | Clone a VM from a cloud-init template (bpg/proxmox) with sizing, VLAN, static IP and cloud-init users. |
 

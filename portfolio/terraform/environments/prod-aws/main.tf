@@ -1,7 +1,7 @@
 # Example environment: a production AWS VPC built from the reusable module.
 # Backend and provider credentials come from the environment / CI (never committed).
 terraform {
-  required_version = ">= 1.6"
+  required_version = ">= 1.11" # S3-native state locking (use_lockfile)
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -10,7 +10,8 @@ terraform {
   }
 
   # Configure in backend.hcl (terraform init -backend-config=backend.hcl):
-  #   bucket = "pdi-tfstate"  key = "prod-aws/terraform.tfstate"  region = "us-east-2"  dynamodb_table = "pdi-tf-locks"
+  #   bucket = "pdi-tfstate"  key = "prod-aws/terraform.tfstate"  region = "us-east-2"  use_lockfile = true
+  # (DynamoDB locking via dynamodb_table is deprecated.) Enable versioning on the state bucket.
   backend "s3" {}
 }
 

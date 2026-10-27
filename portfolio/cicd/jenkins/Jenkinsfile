@@ -1,19 +1,23 @@
 // Declarative Jenkins pipeline: lint, test, build+scan a container, Terraform plan, then a gated apply.
-// Agents are labelled 'linux' with Docker and Terraform available. Credentials come from the Jenkins store.
+// Agents are labelled 'linux' with Docker, Trivy and Terraform available. Credentials come from the Jenkins store.
+// Build once: the image that passed the scan is the image pushed (immutable commit tag). Production changes
+// happen only in the gated stage, which applies the exact Terraform plan that was reviewed.
 pipeline {
-  agent none
+  agent none                       // the approval wait holds no executor
   options {
     timestamps()
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '10'))
-    timeout(time: 60, unit: 'MINUTES')
+    // Timeouts are per stage: a pipeline-level timeout would also count the approval wait and abort it.
   }
   environment {
     IMAGE = "registry.example.com/storefront/web:${env.GIT_COMMIT.take(12)}"
+    TF_DIR = 'terraform/environments/prod-aws'
   }
   stages {
     stage('Quality gates') {
       agent { label 'linux' }
+      options { timeout(time: 60, unit: 'MINUTES') }
       stages {
         stage('Lint') {
           steps {
@@ -28,41 +32,44 @@ pipeline {
         stage('Build image') {
           steps { sh 'docker build -t "$IMAGE" .' }
         }
-        stage('Scan image') {
+        stage('Scan image and IaC') {
           steps {
             sh 'trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$IMAGE"'
+            sh 'trivy config --exit-code 1 --severity HIGH,CRITICAL terraform'
+          }
+        }
+        stage('Push scanned image') {
+          when { branch 'main' }
+          steps {
+            withCredentials([usernamePassword(credentialsId: 'registry', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
+              sh 'echo "$REG_PASS" | docker login registry.example.com -u "$REG_USER" --password-stdin'
+              sh 'docker push "$IMAGE"'
+            }
           }
         }
         stage('Terraform plan') {
           steps {
-            dir('terraform/environments/prod-aws') {
-              sh 'terraform init -input=false'
-              sh 'terraform plan -input=false -out=plan.tfplan'
-            }
+            sh 'terraform -chdir="$TF_DIR" init -input=false'
+            sh 'terraform -chdir="$TF_DIR" plan -input=false -out=plan.tfplan'
+            // The apply stage may run on another agent or workspace: carry the exact reviewed plan.
+            stash name: 'tfplan', includes: "${env.TF_DIR}/plan.tfplan"
           }
         }
-      }
-      post {
-        always { archiveArtifacts artifacts: 'terraform/environments/prod-aws/plan.tfplan', allowEmptyArchive: true }
       }
     }
     stage('Approve deploy') {
       when { branch 'main' }
       options { timeout(time: 1, unit: 'DAYS') }
-      steps { input message: 'Push image and apply the Terraform plan to production?', ok: 'Deploy' }
+      steps { input message: 'Apply the reviewed Terraform plan to production?', ok: 'Deploy' }
     }
     stage('Deploy') {
       when { branch 'main' }
       agent { label 'linux' }
+      options { timeout(time: 30, unit: 'MINUTES') }
       steps {
-        withCredentials([usernamePassword(credentialsId: 'registry', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-          sh 'echo "$REG_PASS" | docker login registry.example.com -u "$REG_USER" --password-stdin'
-          sh 'docker push "$IMAGE"'
-        }
-        dir('terraform/environments/prod-aws') {
-          sh 'terraform init -input=false'
-          sh 'terraform apply -input=false plan.tfplan'
-        }
+        unstash 'tfplan'
+        sh 'terraform -chdir="$TF_DIR" init -input=false'
+        sh 'terraform -chdir="$TF_DIR" apply -input=false plan.tfplan'
       }
     }
   }

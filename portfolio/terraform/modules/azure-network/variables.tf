@@ -32,7 +32,7 @@ variable "allowed_ssh_rdp_sources" {
 variable "enable_flow_logs" {
   type        = bool
   default     = true
-  description = "Enable NSG flow logs via a Network Watcher + storage account."
+  description = "Enable virtual network flow logs via Network Watcher to a firewalled storage account."
 }
 
 variable "tags" {

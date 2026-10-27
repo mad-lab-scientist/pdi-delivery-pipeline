@@ -68,6 +68,11 @@ jobs:
         with: {terraform_version: "1.16.7"}
       - name: fmt
         run: terraform -chdir=portfolio/terraform fmt -check -recursive
+      - name: IaC scan (Trivy, fails on HIGH/CRITICAL)
+        run: >-
+          docker run --rm -v "$PWD/portfolio/terraform:/src:ro"
+          aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
+          config --exit-code 1 --severity HIGH,CRITICAL /src
       - name: validate modules and environments
         run: |
           for d in portfolio/terraform/modules/* portfolio/terraform/environments/*; do
@@ -148,5 +153,6 @@ jobs:
         with: {persist-credentials: false}
       - name: Hadolint
         run: |
-          docker run --rm -i hadolint/hadolint:latest hadolint --failure-threshold warning - \
-            < portfolio/containers/dockerfiles/node-app.Dockerfile
+          docker run --rm -i \
+            hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d \
+            hadolint --failure-threshold warning - < portfolio/containers/dockerfiles/node-app.Dockerfile
