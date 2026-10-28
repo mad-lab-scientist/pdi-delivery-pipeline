@@ -131,13 +131,22 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {persist-credentials: false}
-      - name: Install kustomize, kubeconform, helm
+      - name: Install kustomize, kubeconform, helm (checksum-verified)
         run: |
           cd /tmp
-          curl -sSL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.5.0/kustomize_v5.5.0_linux_amd64.tar.gz | tar xz
-          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
-          curl -sSL https://get.helm.sh/helm-v3.16.3-linux-amd64.tar.gz | tar xz && sudo mv linux-amd64/helm /usr/local/bin/
-          sudo mv /tmp/kustomize /tmp/kubeconform /usr/local/bin/
+          curl -fsSLO https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.5.0/kustomize_v5.5.0_linux_amd64.tar.gz
+          curl -fsSLO https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          curl -fsSLO https://get.helm.sh/helm-v3.16.3-linux-amd64.tar.gz
+          # SHA-256 values from each project's published checksums (verified 2026-10-27)
+          sha256sum --check --strict - <<'EOF'
+          6703a3a70a0c47cf0b37694030b54f1175a9dfeb17b3818b623ed58b9dbc2a77  kustomize_v5.5.0_linux_amd64.tar.gz
+          95f14e87aa28c09d5941f11bd024c1d02fdc0303ccaa23f61cef67bc92619d73  kubeconform-linux-amd64.tar.gz
+          f5355c79190951eed23c5432a3b920e071f4c00a64f75e077de0dd4cb7b294ea  helm-v3.16.3-linux-amd64.tar.gz
+          EOF
+          tar -xzf kustomize_v5.5.0_linux_amd64.tar.gz kustomize
+          tar -xzf kubeconform-linux-amd64.tar.gz kubeconform
+          tar -xzf helm-v3.16.3-linux-amd64.tar.gz linux-amd64/helm
+          sudo mv kustomize kubeconform linux-amd64/helm /usr/local/bin/
       - name: Validate manifests and chart
         run: |
           kustomize build portfolio/containers/kubernetes/web-app \

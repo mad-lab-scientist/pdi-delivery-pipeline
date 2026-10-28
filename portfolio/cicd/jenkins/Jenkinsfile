@@ -11,13 +11,14 @@ pipeline {
     // Timeouts are per stage: a pipeline-level timeout would also count the approval wait and abort it.
   }
   environment {
-    IMAGE = "registry.example.com/storefront/web:${env.GIT_COMMIT.take(12)}"
     TF_DIR = 'terraform/environments/prod-aws'
   }
   stages {
     stage('Quality gates') {
       agent { label 'linux' }
       options { timeout(time: 60, unit: 'MINUTES') }
+      // GIT_COMMIT exists only after this stage's checkout, so the image tag is set here, not at the top.
+      environment { IMAGE = "registry.example.com/storefront/web:${GIT_COMMIT}" }
       stages {
         stage('Lint') {
           steps {
@@ -60,7 +61,8 @@ pipeline {
     stage('Approve deploy') {
       when { branch 'main' }
       options { timeout(time: 1, unit: 'DAYS') }
-      steps { input message: 'Apply the reviewed Terraform plan to production?', ok: 'Deploy' }
+      // submitter: the Jenkins user ID or group allowed to approve (Jenkins administrators can always approve)
+      steps { input message: 'Apply the reviewed Terraform plan to production?', ok: 'Deploy', submitter: 'release-approvers' }
     }
     stage('Deploy') {
       when { branch 'main' }
